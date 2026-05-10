@@ -7,6 +7,7 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.26.0/cytoscape.min.js"></script>
     
     <style>
         html {
@@ -217,13 +218,37 @@
                 height: 300px; /* Μικραίνουμε το ύψος του χάρτη στα κινητά */
             }
         }
+
+            /* --- KNOWLEDGE GRAPH STYLE --- */
+        #cy, #cy2 {
+            width: 100%;
+            height: 450px; /* Μην το βάλεις λιγότερο από 400px για να μην χάνονται οι συνδέσεις */
+            background-color: #f0efea;
+            margin: 20px 0;
+            border-radius: 8px;
+            display: block;
+        }
+
+        .graph-section {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .graph-title {
+            text-align: center;
+            color: #333;
+            border-bottom: 2px solid #aad3df;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
 
     <div class="hero-banner">
         <header class="university-header">
-            <img src="uoc-logo.png" alt="Πανεπιστήμιο Κρήτης" class="university-logo">
+            <img src="Screenshot 2026-04-18 at 01-04-21 Αντίγραφο του Μίκης Θεοδωράκης - Ιστότοπος.png" alt="Πανεπιστήμιο Κρήτης" class="university-logo">
             <div class="titles-container">
                 <span class="uni-text">Πανεπιστήμιο Κρήτης</span>
                 <span class="uni-text">University of Crete</span>
@@ -238,6 +263,16 @@
     </div>
 
     <div class="container">
+        <section class="section">
+            <h2>Knowledge Graph: Σταθμοί της ζωής και του έργου του Μίκη Θεοδωράκη</h2>
+            <div id="cy2"></div>
+        </section>
+
+        <section class="section">
+            <h2>Knowledge Graph: Τόποι μνήμης του Μίκη Θεοδωράκη</h2>
+            <div id="cy"></div>
+        </section>
+
         <section class="section">
             <h2>Η ζωή και το έργο του Μίκη Θεοδωράκη</h2>
             <p>
@@ -257,6 +292,16 @@
             </p>
         </section>
 
+        <!-- ΕΔΩ ΜΠΑΙΝΕΙ ΤΟ ΝΕΟ ΤΜΗΜΑ -->
+        <section class="section">
+            <h2>Το γενεαλογικό δέντρο του Μίκη Θεοδωράκη</h2>
+            <p style="font-size: 0.9em; color: #555; margin-top: -5px; margin-bottom: 20px;">
+                Από τους παππούδες του, Μιχάλη Θεοδωράκη και Αικατερίνη Σπυριδάκη, έως και τα εγγόνια του.
+            </p>
+            <img src="genealogy.jpg" alt="Γενεαλογικό δέντρο Μίκη Θεοδωράκη" class="family-tree-img">
+        </section>
+        <!-- ΤΕΛΟΣ ΝΕΟΥ ΤΜΗΜΑΤΟΣ -->
+
         <section class="section">
             <h2>Εξερευνήστε τους βασικούς σταθμούς της ζωής και του έργου του Μίκη Θεοδωράκη</h2>
             <div id="map1" style="height: 400px; margin-bottom: 20px;"></div>
@@ -267,18 +312,10 @@
             <div id="map2" style="height: 400px;"></div>
         </section>
 
-        <section class="section">
-            <h2>Το γενεαλογικό δέντρο του Μίκη Θεοδωράκη</h2>
-            <p style="font-size: 0.9em; color: #555; margin-top: -5px; margin-bottom: 20px;">
-                Από τους παππούδες του, Μιχάλη Θεοδωράκη και Αικατερίνη Σπυριδάκη, έως και τα εγγόνια του.
-            </p>
-            <img src="genealogy.jpg" alt="Γενεαλογικό δέντρο Μίκη Θεοδωράκη" class="family-tree-img">
-        </section>
-
     </div> <footer style="color: #888; text-align: center; padding: 20px;">
         <p style="margin-bottom: 0;">Δημιουργός: Ιωάννα Τσιάρα</p>
         <p style="margin-top: 0;">Επιβλέπουσα: Μαρία Παπαδοπούλου, Επίκ. Καθηγήτρια (Τμ. Φιλολογίας)</p>
-        <p>Πανεπιστήμιο Κρήτης, Πρόγραμμα ΤΑΛΟΣ AI4SSH | 2026</p>
+        <p>Πανεπιστήμιο Κρήτης, Πρόγραμμα ΤΑΛΩΣ AI4SSH | 2026</p>
     </footer>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -974,6 +1011,397 @@
         map1.invalidateSize(); 
     }, 500);
 
+    </script>
+
+    <script>
+
+        var commonStyle = [
+            {
+                selector: 'node',
+                style: {
+                    'background-color': '#cfe1c3',
+                    'label': 'data(name)',
+                    'text-valign': 'center',
+                    'color': '#333',
+                    'font-family': 'Open Sans',
+                    'font-size': '10px',
+                    'width': '80px', 'height': '80px',
+                    'text-wrap': 'wrap', 'text-max-width': '70px'
+                }
+            },
+            {
+                selector: '#mikis',
+                style: {
+                    'background-color': '#ffffff', // Λευκός ο Μίκης
+                    'width': '100px', 'height': '100px', 'font-weight': 'bold'
+                }
+            },
+            {
+                selector: '.location',
+                style: {
+                    'font-weight': 'bold',
+                    'font-size': '11px',
+                    'background-color': '#d4e6f1',
+                }
+            },
+            {
+                selector: 'edge',
+                style: {
+                    'width': 2,
+                    'line-color': '#bbb',
+                    'target-arrow-color': '#bbb',
+                    'target-arrow-shape': 'triangle',
+                    'label': 'data(label)',
+                    'font-size': '8px',
+                    'curve-style': 'bezier'
+                }
+            }
+        ];
+    
+    var cy2 = cytoscape({
+        container: document.getElementById('cy2'),
+        elements: [
+            // Nodes
+            { data: { id: 'mikis', name: 'Mikis Theodorakis' } },
+            { data: { id: 'vrakades', name: 'Vrakades, Ikaria' } },
+            { data: { id: 'house_scorpions', name: 'House with Scorpions' }, classes: 'location' },
+            { data: { id: 'coords_ikaria', name: '37.5925, 26.0294' } },
+            { data: { id: 'period_exile_ikaria', name: '1947-1948' } },
+            { data: { id: 'zatouna', name: 'Zatouna, Arcadia' }, classes: 'location' },
+            { data: { id: 'period_zatouna', name: '1968-1969' } },
+            { data: { id: 'guards', name: 'Under Police Guard' } },
+            { data: { id: 'coords_zatouna', name: '37.7040, 22.0268' } },
+            { data: { id: 'athens_home', name: 'Athens Residence' }, classes: 'location' },
+            { data: { id: 'death_date', name: '2 September 2021' } },
+            { data: { id: 'coords_athens', name: '37.9682, 23.7237' } },
+            { data: { id: 'pyrgos', name: 'Pyrgos, Elis' } },
+            { data: { id: 'pyrgos_home', name: 'Residence in Pyrgos' }, classes: 'location' },
+            { data: { id: 'period_pyrgos', name: '1938-1939' } },
+            { data: { id: 'father_transfer', name: 'Father\'s Transfer to Prefecture' } },
+            { data: { id: 'coords_pyrgos', name: '37.9303, 21.4684' } },
+            { data: { id: 'chios', name: 'Chios Town' } },
+            { data: { id: 'birth_place_chios', name: 'Birth Residence' }, classes: 'location' },
+            { data: { id: 'birth_date_full', name: '29 July 1925' } },
+            { data: { id: 'first_months', name: 'First months of life' } },
+            { data: { id: 'coords_birth', name: '38.3712, 26.1334' } },
+            { data: { id: 'makronisos', name: 'Makronisos Island' } },
+            { data: { id: 'camp_makronisos', name: 'Military Detention Camp' }, classes: 'location' },
+            { data: { id: 'period_makronisos', name: '1948-1949' } },
+            { data: { id: 'coords_makronisos', name: '37.7087, 24.1250' } },
+
+            // Edges (Σχέσεις)
+            { data: { source: 'house_scorpions', target: 'vrakades', label: 'located in' } },
+            { data: { source: 'mikis', target: 'house_scorpions', label: 'exiled in' } },
+            { data: { source: 'house_scorpions', target: 'coords_ikaria', label: 'has coordinates' } },
+            { data: { source: 'house_scorpions', target: 'period_exile_ikaria', label: 'period of stay' } },
+            { data: { source: 'mikis', target: 'zatouna', label: 'exiled in' } },
+            { data: { source: 'zatouna', target: 'period_zatouna', label: 'stay duration' } },
+            { data: { source: 'mikis', target: 'guards', label: 'monitored by' } },
+            { data: { source: 'guards', target: 'zatouna', label: 'at' } },
+            { data: { source: 'zatouna', target: 'coords_zatouna', label: 'has coordinates' } },
+            { data: { source: 'mikis', target: 'death_date', label: 'passed away on' } },
+            { data: { source: 'death_date', target: 'athens_home', label: 'at' } },
+            { data: { source: 'athens_home', target: 'coords_athens', label: 'has coordinates' } },
+            { data: { source: 'mikis', target: 'pyrgos_home', label: 'lived in' } },
+            { data: { source: 'pyrgos_home', target: 'pyrgos', label: 'located in' } },
+            { data: { source: 'pyrgos_home', target: 'period_pyrgos', label: 'stay duration' } },
+            { data: { source: 'pyrgos_home', target: 'father_transfer', label: 'due to' } },
+            { data: { source: 'pyrgos_home', target: 'coords_pyrgos', label: 'has coordinates' } },
+            { data: { source: 'mikis', target: 'birth_place_chios', label: 'born at' } },
+            { data: { source: 'birth_place_chios', target: 'chios', label: 'located in' } },
+            { data: { source: 'birth_place_chios', target: 'birth_date_full', label: 'date' } },
+            { data: { source: 'birth_place_chios', target: 'first_months', label: 'stayed for' } },
+            { data: { source: 'birth_place_chios', target: 'coords_birth', label: 'has coordinates' } },
+            { data: { source: 'mikis', target: 'camp_makronisos', label: 'exiled in' } },
+            { data: { source: 'camp_makronisos', target: 'makronisos', label: 'located on' } },
+            { data: { source: 'camp_makronisos', target: 'period_makronisos', label: 'stay duration' } },
+            { data: { source: 'camp_makronisos', target: 'coords_makronisos', label: 'has coordinates' } },
+        ],
+        style: commonStyle,
+        layout: { name: 'cose', padding: 40 }
+    });
+
+    var cy = cytoscape({
+            container: document.getElementById('cy'),
+            elements: [
+                // Nodes
+                { data: { id: 'mikis', name: 'Mikis Theodorakis' } },
+                { data: { id: 'galatas', name: 'Galatas, Chania' } },
+                { data: { id: 'house_galatas', name: 'Ancestral Home' }, classes: 'building' },
+                { data: { id: 'coords_galatas', name: '35.5026, 23.9650' } },
+                { data: { id: 'vrakades', name: 'Vrakades, Ikaria' } },
+                { data: { id: 'house_scorpions', name: 'House with Scorpions' }, classes: 'building' },
+                { data: { id: 'coords_ikaria', name: '37.5925, 26.0294' } },
+                { data: { id: 'period_exile', name: '1947-1948' } },
+                { data: { id: 'zatouna', name: 'Zatouna, Arcadia', wiki: 'https://el.wikipedia.org/wiki/Ζάτουνα_Αρκαδίας' } },
+                { data: { id: 'museum_zatouna', name: 'Mikis Theodorakis Museum' }, classes: 'building' },
+                { data: { id: 'coords_zatouna', name: '37.7040, 22.0268' } },
+                { data: { id: '1919', name: '1919' } },
+                { data: { id: '1968', name: '1968' } },
+                { data: { id: '2006', name: '2006' } },
+                { data: { id: 'athens_home', name: 'Athens Residence' }, classes: 'building' },
+                { data: { id: 'coords_athens', name: '37.9682, 23.7237' } },
+                { data: { id: 'death_date', name: '2 September 2021' } },
+                { data: { id: 'customs_chania', name: 'Old Customs House' } },
+                { data: { id: 'theater_mikis', name: 'Theater "Mikis Theodorakis"' }, classes: 'building' },
+                { data: { id: 'coords_chania_theater', name: '35.5183, 24.0204' } },
+                { data: { id: '2017', name: '2017' } },
+                { data: { id: 'chania', name: 'Chania', wiki: 'https://en.wikipedia.org/wiki/Chania' } },
+                { data: { id: 'vrilissia', name: 'Vrilissia, Athens', wiki: 'https://en.wikipedia.org/wiki/Vrilissia' } },
+                { data: { id: 'typet', name: 'Former TYPET Area' } },
+                { data: { id: 'park_vrilissia', name: 'Park "Mikis Theodorakis"' }, classes: 'building' },
+                { data: { id: 'coords_vrilissia', name: '38.0866, 23.8384' } },
+                { data: { id: 'gazi', name: 'Gazi, Athens', wiki: 'https://el.wikipedia.org/wiki/Γκάζι_(Αθήνα)' } },
+                { data: { id: 'park_gazi', name: 'Park "Mikis Theodorakis"' }, classes: 'building' },
+                { data: { id: 'coords_gazi', name: '37.9788, 23.7157' } },
+                { data: { id: 'june_2023', name: '21 June 2023' } },
+                { data: { id: 'rentis', name: 'Agios Ioannis Rentis', wiki: 'https://el.wikipedia.org/wiki/Άγιος_Ιωάννης_Ρέντης' } },
+                { data: { id: 'theater_rentis', name: 'Open Theater "Mikis Theodorakis"' }, classes: 'building' },
+                { data: { id: 'coords_rentis', name: '37.9616, 23.6715' } },
+                { data: { id: '1998', name: '1998' } },
+                { data: { id: 'perama', name: 'Perama', wiki: 'https://en.wikipedia.org/wiki/Perama' } },
+                { data: { id: 'theater_perama', name: 'Open Municipal Theater "Mikis Theodorakis"' }, classes: 'building' },
+                { data: { id: 'coords_perama', name: '37.9654, 23.5574' } },
+                { data: { id: 'heraklion', name: 'Heraklion, Crete', wiki: 'https://en.wikipedia.org/wiki/Heraklion' } },
+                { data: { id: 'bethlehem_gate', name: 'Bethlehem Gate' } },
+                { data: { id: 'theater_heraklion', name: 'Open Theater "Mikis Theodorakis"' }, classes: 'building' },
+                { data: { id: 'coords_heraklion', name: '35.3342, 25.1279' } },
+                { data: { id: 'sept_2025', name: '2 September 2025' } },
+                { data: { id: 'kamatero', name: 'Kamatero, Athens' } },
+                { data: { id: 'theater_kamatero', name: 'Summer Theater "Mikis Theodorakis"'}, classes: 'building' },
+                { data: { id: 'orfeas', name: '"Orfeas" Theater' } },
+                { data: { id: 'coords_kamatero', name: '38.0574, 23.7025' } },
+                { data: { id: 'emprosneros', name: 'Emprosneros, Apokoronas' } },
+                { data: { id: 'theater_emprosneros', name: 'Open Theater "Mikis Theodorakis"'}, classes: 'building' },
+                { data: { id: 'coords_emprosneros', name: '35.3458, 24.1897' } },
+                { data: { id: 'kastromina', name: 'Kastromina, Chios' } },
+                { data: { id: 'theater_chios', name: 'Open Theater "Mikis Theodorakis"' }, classes: 'building' },
+                { data: { id: 'coords_chios_theater', name: '38.3674, 26.1210' } },
+                { data: { id: 'argyroupoli', name: 'Argyroupoli, Athens' } },
+                { data: { id: 'cultural_center_argyroupoli', name: 'Cultural & Conference Center "Mikis Theodorakis"' }, classes: 'building' },
+                { data: { id: 'coords_argyroupoli', name: '37.9093, 23.7514' } },
+                { data: { id: 'cave_mikis', name: 'The Cave of Mikis Theodorakis' }, classes: 'building' },
+                { data: { id: 'coords_cave', name: '35.5157, 23.9843' } },
+                { data: { id: 'hersonissos', name: 'Hersonissos, Crete' } },
+                { data: { id: 'conf_center_hersonissos', name: 'Conference Center "Mikis Theodorakis"' }, classes: 'building' },
+                { data: { id: 'coords_hersonissos', name: '35.3239, 25.3845' } },
+                { data: { id: 'melissia', name: 'Melissia, Athens' } },
+                { data: { id: 'cultural_center_melissia', name: 'Cultural Center "Mikis Theodorakis"' }, classes: 'building' },
+                { data: { id: 'coords_melissia', name: '38.0614, 23.8363' } },
+                { data: { id: 'acharnes', name: 'Acharnes, Athens' } },
+                { data: { id: 'theater_acharnes', name: 'Municipal Amphitheater "Mikis Theodorakis")' }, classes: 'building' },
+                { data: { id: 'coords_acharnes', name: '38.0861, 23.7239' } },
+                { data: { id: 'dimitsana', name: 'Dimitsana, Arcadia' } },
+                { data: { id: 'theater_dimitsana', name: 'Amphitheater "Mikis Theodorakis"' }, classes: 'building' },
+                { data: { id: 'aug_2002', name: '17 August 2002' } },
+                { data: { id: 'coords_dimitsana', name: '37.5956, 22.0423' } },
+                { data: { id: 'evosmos', name: 'Kordelio-Evosmos, Thessaloniki' } },
+                { data: { id: 'theater_evosmos', name: 'Multifunctional Center & Theater "Mikis Theodorakis"' }, classes: 'building' },
+                { data: { id: 'coords_evosmos', name: '40.6666, 22.8953' } },
+                { data: { id: 'pyrgos', name: 'Pyrgos, Elis' } },
+                { data: { id: 'house_pyrgos', name: 'Residence in Pyrgos' }, classes: 'building' },
+                { data: { id: 'period_pyrgos', name: '1938-1939' } },
+                { data: { id: 'coords_pyrgos', name: '37.9303, 21.4684' } },
+                { data: { id: 'alimos', name: 'Alimos, Athens' } },
+                { data: { id: 'square_alimos', name: 'Square "Mikis Theodorakis"' }, classes: 'building' },
+                { data: { id: 'coords_alimos', name: '37.9228, 23.7351' } },
+                { data: { id: 'aigaleo', name: 'Aigaleo, Athens' } },
+                { data: { id: 'school_aigaleo', name: '4th Primary School of Aigaleo "Mikis Theodorakis"' }, classes: 'building' },
+                { data: { id: 'coords_aigaleo', name: '37.9975, 23.6856' } },
+                { data: { id: 'school_chania', name: '1st Primary School of Nea Kydonia "Mikis Theodorakis"' }, classes: 'building' },
+                { data: { id: 'coords_school_chania', name: '35.5017, 23.9663' } },
+                { data: { id: 'neos_kosmos', name: 'Neos Kosmos, Athens' } },
+                { data: { id: 'school_athens', name: '91st Primary School of Athens "Mikis Theodorakis"' }, classes: 'building' },
+                { data: { id: 'coords_school_athens', name: '37.9609, 23.7422' } },
+                { data: { id: 'larnaca', name: 'Larnaca, Cyprus' } },
+                { data: { id: 'music_school_larnaca', name: 'Music School of Larnaca "Mikis Theodorakis"' }, classes: 'building' },
+                { data: { id: 'coords_larnaca', name: '34.9222, 33.6102' } },
+                { data: { id: 'stavroupoli', name: 'Stavroupoli, Thessaloniki' } },
+                { data: { id: 'school_stavroupoli', name: '3rd Primary School of Stavroupoli "Mikis Theodorakis"' }, classes: 'building' },
+                { data: { id: 'coords_stavroupoli', name: '40.6601, 22.9305' } },
+                { data: { id: 'argostoli', name: 'Argostoli, Kefalonia' } },
+                { data: { id: 'school_kefalonia', name: '1st Primary School of Argostoli "Mikis Theodorakis"' }, classes: 'building' },
+                { data: { id: 'coords_kefalonia', name: '38.1763, 20.4864' } },
+                { data: { id: 'oropos', name: 'Skala Oropou, Attica' } },
+                { data: { id: 'lyceum_oropos', name: 'General Lyceum of Skala Oropou "Mikis Theodorakis"' }, classes: 'building' },
+                { data: { id: 'coords_oropos', name: '38.3279, 23.7748' } },
+                { data: { id: 'chios_town', name: 'Chios Town' } },
+                { data: { id: 'birth_house_chios', name: 'Birthplace Residence' }, classes: 'building' },
+                { data: { id: 'year_1904', name: '1904' } },
+                { data: { id: 'coords_birth_house', name: '38.3712, 26.1333' } },
+                { data: { id: 'cemetery_galatas', name: 'Galatas Cemetery' }, classes: 'building' },
+                { data: { id: 'date_burial', name: '9 September 2021' } },
+                { data: { id: 'coords_burial', name: '35.5008, 23.9668' } },
+
+                // Edges (Σχέσεις)
+                { data: { source: 'house_galatas', target: 'galatas', label: 'located in' } },
+                { data: { source: 'house_galatas', target: 'mikis', label: 'owned by' } },
+                { data: { source: 'house_galatas', target: 'coords_galatas', label: 'has coords' } },
+                { data: { source: 'house_scorpions', target: 'vrakades', label: 'located in' } },
+                { data: { source: 'house_scorpions', target: 'coords_ikaria', label: 'has coords' } },
+                { data: { source: 'mikis', target: 'house_scorpions', label: 'exiled in' } },
+                { data: { source: 'house_scorpions', target: 'period_exile', label: 'time period' } },
+                { data: { source: 'museum_zatouna', target: 'zatouna', label: 'located in' } },
+                { data: { source: 'museum_zatouna', target: 'coords_zatouna', label: 'has coordinates' } },
+                { data: { source: 'museum_zatouna', target: '1919', label: 'building construction' } },
+                { data: { source: 'museum_zatouna', target: '2006', label: 'established as museum' } },
+                { data: { source: 'museum_zatouna', target: 'mikis', label: 'honors' } },
+                { data: { source: 'mikis', target: 'zatouna', label: 'exiled in' } },
+                { data: { source: 'zatouna', target: '1968', label: 'start of exile' } },
+                { data: { source: 'mikis', target: 'athens_home', label: 'residence' } },
+                { data: { source: 'athens_home', target: 'coords_athens', label: 'has coordinates' } },
+                { data: { source: 'mikis', target: 'death_date', label: 'died on' } },
+                { data: { source: 'death_date', target: 'athens_home', label: 'at' } },
+                { data: { source: 'customs_chania', target: 'theater_mikis', label: 'renamed to' } },
+                { data: { source: 'theater_mikis', target: '2017', label: 'inaugurated' } },
+                { data: { source: 'theater_mikis', target: 'coords_chania_theater', label: 'has coordinates' } },
+                { data: { source: 'theater_mikis', target: 'mikis', label: 'named after' } },
+                { data: { source: 'customs_chania', target: 'chania', label: 'located in' } },
+                { data: { source: 'typet', target: 'park_vrilissia', label: 'renamed to' } },
+                { data: { source: 'park_vrilissia', target: 'mikis', label: 'named after' } },
+                { data: { source: 'park_vrilissia', target: 'coords_vrilissia', label: 'has coordinates' } },
+                { data: { source: 'park_vrilissia', target: 'vrilissia', label: 'located in' } },
+                { data: { source: 'park_gazi', target: 'gazi', label: 'located in' } },
+                { data: { source: 'park_gazi', target: 'mikis', label: 'named after' } },
+                { data: { source: 'park_gazi', target: 'coords_gazi', label: 'has coordinates' } },
+                { data: { source: 'park_gazi', target: 'june_2023', label: 'renamed on' } },
+                { data: { source: 'theater_rentis', target: 'rentis', label: 'located in' } },
+                { data: { source: 'theater_rentis', target: 'mikis', label: 'named after' } },
+                { data: { source: 'theater_rentis', target: 'coords_rentis', label: 'has coordinates' } },
+                { data: { source: 'theater_rentis', target: '1998', label: 'inaugurated' } },
+                { data: { source: 'theater_rentis', target: 'mikis', label: 'inaugurated by' } },
+                { data: { source: 'theater_perama', target: 'perama', label: 'located in' } },
+                { data: { source: 'theater_perama', target: 'mikis', label: 'named after' } },
+                { data: { source: 'theater_perama', target: 'coords_perama', label: 'has coordinates' } },
+                { data: { source: 'bethlehem_gate', target: 'heraklion', label: 'located in' } },
+                { data: { source: 'bethlehem_gate', target: 'theater_heraklion', label: 'renamed to' } },
+                { data: { source: 'theater_heraklion', target: 'mikis', label: 'named after' } },
+                { data: { source: 'theater_heraklion', target: 'coords_heraklion', label: 'has coordinates' } },
+                { data: { source: 'theater_heraklion', target: 'sept_2025', label: 'renamed on' } },
+                { data: { source: 'theater_kamatero', target: 'kamatero', label: 'located in' } },
+                { data: { source: 'theater_kamatero', target: 'mikis', label: 'named after' } },
+                { data: { source: 'theater_kamatero', target: 'orfeas', label: 'formerly' } },
+                { data: { source: 'theater_kamatero', target: 'coords_kamatero', label: 'has coordinates' } },
+                { data: { source: 'theater_emprosneros', target: 'emprosneros', label: 'located in' } },
+                { data: { source: 'theater_emprosneros', target: 'mikis', label: 'named after' } },
+                { data: { source: 'theater_emprosneros', target: 'coords_emprosneros', label: 'has coordinates' } },
+                { data: { source: 'theater_chios', target: 'kastromina', label: 'located in' } },
+                { data: { source: 'theater_chios', target: 'mikis', label: 'named after' } },
+                { data: { source: 'theater_chios', target: 'coords_chios_theater', label: 'has coordinates' } },
+                { data: { source: 'cultural_center_argyroupoli', target: 'argyroupoli', label: 'located in' } },
+                { data: { source: 'cultural_center_argyroupoli', target: 'mikis', label: 'named after' } },
+                { data: { source: 'cultural_center_argyroupoli', target: 'coords_argyroupoli', label: 'has coordinates' } },
+                { data: { source: 'cave_mikis', target: 'galatas', label: 'located in' } },
+                { data: { source: 'cave_mikis', target: 'mikis', label: 'named after / used by' } },
+                { data: { source: 'cave_mikis', target: 'coords_cave', label: 'has coordinates' } },
+                { data: { source: 'conf_center_hersonissos', target: 'hersonissos', label: 'located in' } },
+                { data: { source: 'conf_center_hersonissos', target: 'mikis', label: 'named after' } },
+                { data: { source: 'conf_center_hersonissos', target: 'coords_hersonissos', label: 'has coordinates' } },
+                { data: { source: 'cultural_center_melissia', target: 'melissia', label: 'located in' } },
+                { data: { source: 'cultural_center_melissia', target: 'mikis', label: 'named after' } },
+                { data: { source: 'cultural_center_melissia', target: 'coords_melissia', label: 'has coordinates' } },
+                { data: { source: 'theater_acharnes', target: 'acharnes', label: 'located in' } },
+                { data: { source: 'theater_acharnes', target: 'mikis', label: 'named after' } },
+                { data: { source: 'theater_acharnes', target: 'coords_acharnes', label: 'has coordinates' } },
+                { data: { source: 'theater_dimitsana', target: 'dimitsana', label: 'located in' } },
+                { data: { source: 'theater_dimitsana', target: 'mikis', label: 'named after' } },
+                { data: { source: 'theater_dimitsana', target: 'aug_2002', label: 'inaugurated on' } },
+                { data: { source: 'theater_dimitsana', target: 'coords_dimitsana', label: 'has coordinates' } },
+                { data: { source: 'theater_evosmos', target: 'evosmos', label: 'located in' } },
+                { data: { source: 'theater_evosmos', target: 'mikis', label: 'named after' } },
+                { data: { source: 'theater_evosmos', target: 'coords_evosmos', label: 'has coordinates' } },
+                { data: { source: 'house_pyrgos', target: 'pyrgos', label: 'located in' } },
+                { data: { source: 'house_pyrgos', target: 'mikis', label: 'lived in' } },
+                { data: { source: 'house_pyrgos', target: 'period_pyrgos', label: 'time period' } },
+                { data: { source: 'house_pyrgos', target: 'coords_pyrgos', label: 'has coordinates' } },
+                { data: { source: 'square_alimos', target: 'alimos', label: 'located in' } },
+                { data: { source: 'square_alimos', target: 'mikis', label: 'named after' } },
+                { data: { source: 'square_alimos', target: 'coords_alimos', label: 'has coordinates' } },
+                { data: { source: 'school_aigaleo', target: 'aigaleo', label: 'located in' } },
+                { data: { source: 'school_aigaleo', target: 'mikis', label: 'named after' } },
+                { data: { source: 'school_aigaleo', target: 'coords_aigaleo', label: 'has coordinates' } },
+                { data: { source: 'school_chania', target: 'galatas', label: 'located in' } },
+                { data: { source: 'school_chania', target: 'mikis', label: 'named after' } },
+                { data: { source: 'school_chania', target: 'coords_school_chania', label: 'has coordinates' } },
+                { data: { source: 'school_athens', target: 'neos_kosmos', label: 'located in' } },
+                { data: { source: 'school_athens', target: 'mikis', label: 'named after' } },
+                { data: { source: 'school_athens', target: 'coords_school_athens', label: 'has coordinates' } },
+                { data: { source: 'music_school_larnaca', target: 'larnaca', label: 'located in' } },
+                { data: { source: 'music_school_larnaca', target: 'mikis', label: 'named after' } },
+                { data: { source: 'music_school_larnaca', target: 'coords_larnaca', label: 'has coordinates' } },
+                { data: { source: 'school_stavroupoli', target: 'stavroupoli', label: 'located in' } },
+                { data: { source: 'school_stavroupoli', target: 'mikis', label: 'named after' } },
+                { data: { source: 'school_stavroupoli', target: 'coords_stavroupoli', label: 'has coordinates' } },
+                { data: { source: 'school_kefalonia', target: 'argostoli', label: 'located in' } },
+                { data: { source: 'school_kefalonia', target: 'mikis', label: 'attended as student' } },
+                { data: { source: 'school_kefalonia', target: 'coords_kefalonia', label: 'has coordinates' } },
+                { data: { source: 'lyceum_oropos', target: 'oropos', label: 'located in' } },
+                { data: { source: 'lyceum_oropos', target: 'mikis', label: 'named after' } },
+                { data: { source: 'lyceum_oropos', target: 'coords_oropos', label: 'has coordinates' } },
+                { data: { source: 'birth_house_chios', target: 'chios_town', label: 'located in' } },
+                { data: { source: 'birth_house_chios', target: 'mikis', label: 'first residence' } },
+                { data: { source: 'birth_house_chios', target: 'year_1904', label: 'built in' } },
+                { data: { source: 'birth_house_chios', target: 'coords_birth_house', label: 'has coordinates' } },
+                { data: { source: 'mikis', target: 'cemetery_galatas', label: 'buried at' } },
+                { data: { source: 'cemetery_galatas', target: 'galatas', label: 'located in' } },
+                { data: { source: 'cemetery_galatas', target: 'date_burial', label: 'burial date' } },
+                { data: { source: 'cemetery_galatas', target: 'coords_burial', label: 'has coordinates' } }
+            ],
+            style: [
+                {
+                    selector: 'node',
+                    style: {
+                        'background-color': '#cfe1c3',
+                        'label': 'data(name)',
+                        'text-valign': 'center',
+                        'color': '#333',
+                        'font-family': 'Open Sans',
+                        'font-size': '10px',
+                        'width': '80px', 'height': '80px',
+                        'text-wrap': 'wrap', 'text-max-width': '70px'
+                    }
+                },
+                {
+                    selector: '#mikis',
+                    style: {
+                        'background-color': '#ffffff', // Λευκός ο Μίκης
+                        'width': '100px', 'height': '100px', 'font-weight': 'bold'
+                    }
+                },
+                {
+                    selector: '.building',
+                    style: {
+                        'font-weight': 'bold',
+                        'font-size': '11px',
+                        'background-color': '#d4e6f1',
+                    }
+                },
+                {
+                    selector: 'edge',
+                    style: {
+                        'width': 2,
+                        'line-color': '#bbb',
+                        'target-arrow-color': '#bbb',
+                        'target-arrow-shape': 'triangle',
+                        'label': 'data(label)',
+                        'font-size': '8px',
+                        'curve-style': 'bezier'
+                    }
+                }
+            ],
+            layout: { name: 'cose', padding: 30 }
+        });
+
+        // Διόρθωση για να μη χάνεται ο γράφος στο resize
+        window.addEventListener('resize', function(){
+            cy.resize(); cy.fit(); 
+            cy2.resize(); cy2.fit();
+        });
+    // Δυνατότητα κλικ: Όταν πατάς έναν κόμβο, ο γράφος εστιάζει
+        cy.on('tap', 'node', function(evt){
+        var node = evt.target;
+        console.log('Επιλέχθηκε: ' + node.data('name'));
+        });
     </script>
 
 </body>

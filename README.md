@@ -1,7 +1,7 @@
-# Mapping the Life and Memorial Sites of Mikis Theodorakis
+## Mapping the Life and Memorial Sites of Mikis Theodorakis
 This project is a web-based multimedia platform designed to map the key milestones, international journeys, and memorial sites associated with the life and work of the Greek composer, Mikis Theodorakis. By leveraging Digital Humanities tools, it provides a non-linear, spatial, and interactive exploration of his cultural and political legacy.
 
-## 👥 Project Identity
+### Project Identity
 *   **Creator:** Ioanna Tsiara (Undergraduate Student, Department of Philology, Linguistics Sector)
 *   **Supervisor:** Maria Papadopoulou (Assistant Professor, Department of Philology)
 *   **Institution:** University of Crete
